@@ -12,5 +12,6 @@ urlpatterns = [
     path("rate/", RateProfessorView.as_view(), name="rate-module"),
     path("professors/<str:professor_id>/", ProfessorDetailView.as_view(), name="professor-detail"),
     path("module/<str:module_code>/", ModuleDetailView.as_view(), name="module-detail"),
+    path("module/<str:module_code>/<int:year>/<int:semester>/", ModuleDetailViewRate.as_view(), name="module-detail-rate"),
     path("admin/", admin.site.urls),
 ]

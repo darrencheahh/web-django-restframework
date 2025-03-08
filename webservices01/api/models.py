@@ -28,4 +28,7 @@ class Rating(models.Model):
     class Meta:
         unique_together = ['student', 'professor', 'module']
 
+    def __str__(self):
+        return f"{self.student} rated {self.professor} in {self.module} with {self.rating}"
+
 

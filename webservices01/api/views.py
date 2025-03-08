@@ -25,7 +25,7 @@ class LoginView(APIView):
         password = request.data.get("password")
         user = authenticate(username=username, password=password)
         if user:
-            token, _ = Token.objects.get_or_create(user=user)
+            token, created = Token.objects.get_or_create(user=user)
             return Response({"token": token.key}, status=status.HTTP_200_OK)
         return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -33,8 +33,13 @@ class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        request.user.auth_token.delete()
-        return Response({"message": "Logged out successfully"}, status=status.HTTP_200_OK)
+        print("request.user", request.user)
+        print("request.auth", request.auth)
+        try:
+            request.auth.delete()
+            return Response({"message": "Logged out successfully"}, status=status.HTTP_200_OK)
+        except AttributeError:
+            return Response({"error": "Invalid token or already logged out"}, status=status.HTTP_400_BAD_REQUEST)
 
 class ProfessorDetailView(APIView):
     def get(self, request, professor_id):
@@ -47,19 +52,44 @@ class ProfessorDetailView(APIView):
         except Professor.DoesNotExist:
             return Response({"error": "Professor not found"}, status=status.HTTP_404_NOT_FOUND)
 
-class ModuleDetailView(APIView):
+class ModuleDetailView(APIView): #for average
     def get(self, request, module_code):
-        try:
-            module = Module.objects.get(code=module_code)
-            return Response({
+
+        modules = Module.objects.filter(code=module_code)
+    
+        if not modules.exists():
+            return Response({"error": "Module not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        module_list = [
+            {
+                "id": module.id,
                 "code": module.code,
                 "name": module.name,
                 "year": module.year,
-                "semester": module.semester,
-                "professors": [{"id": professor.id, "name": professor.name} for professor in module.professors.all()]
-            }, status=status.HTTP_200_OK)
+                "semester": module.semester
+            }
+            for module in modules
+        ]
+        return Response({"modules": module_list}, status=status.HTTP_200_OK)
+
+
+class ModuleDetailViewRate(APIView):  # for Rate
+    def get(self, request, module_code, year, semester):
+        try:
+            module = Module.objects.get(code=module_code, year=year, semester=semester)
+
+            module_data = {
+                    "id": module.id,
+                    "code": module.code,
+                    "name": module.name,
+                    "year": module.year,
+                    "semester": module.semester
+            }
+            return Response({"modules": module_data}, status=status.HTTP_200_OK)
         except Module.DoesNotExist:
             return Response({"error": "Module not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class ModuleListView(generics.ListCreateAPIView):
     queryset = Module.objects.all()
@@ -75,7 +105,7 @@ class ProfessorRatingView(APIView):
             data.append({"professor": professor.name, "rating": "*" * avg_ratings})
         return Response(data, status=status.HTTP_200_OK)
 
-class ProfessorModuleRatingView(APIView):
+class ProfessorModuleRatingView(APIView): #average rating
     def get(self, request, professor_id, module_code):
         try:
             module = Module.objects.filter(code=module_code)
