@@ -1,7 +1,7 @@
 import requests
 import getpass
 
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = "https://sc23zyc.pythonanywhere.com/api"
 TOKEN = None
 
 def register():
