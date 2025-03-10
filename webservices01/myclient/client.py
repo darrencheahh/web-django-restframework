@@ -1,7 +1,7 @@
 import requests
 import getpass
 
-BASE_URL = "https://sc23zyc.pythonanywhere.com/api"
+BASE_URL = "https://sc23zyc.pythonanywhere.com/"
 TOKEN = None
 
 def register():
@@ -30,6 +30,7 @@ def register():
 def login():
     global TOKEN
 
+    url = input("Enter URL (default: https://sc23zyc.pythonanywhere.com/): ")
     username = input("Enter username: ")
     password = getpass.getpass("Enter password: ")
 
@@ -164,7 +165,7 @@ def rate_professor():
             rating = int(input("Enter rating (1-5): ").strip())
 
 
-            if rating <= 1 or rating >= 5:
+            if rating > 1 or rating < 5:
                 break
             else:
                 print("Rating must be between 1 and 5. Please try again.")
